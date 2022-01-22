@@ -20,6 +20,21 @@ It's not really that useful for public Go packages; just link to
 distributing internal Go packages within an organization that is using
 Backstage as an internal catalog of all the technical things.
 
+> How do I install it?
+
+    go install github.com/cmars/greenroom@latest
+
+> How do I run it?
+
+In your Go module,
+
+    greenroom ./...
+
+will create Markdown documentation for each package matching the query `./...`
+in a `docs` subdirectory, and a `mkdocs.yml` that references all of it.
+
+`greenroom -help` for more options.
+
 > How does it work?
 
 [github.com/princjef/gomarkdoc](https://github.com/princjef/gomarkdoc) is doing
