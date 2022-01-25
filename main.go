@@ -49,13 +49,13 @@ func main() {
 		log.Printf("%s %#v", pkg.PkgPath, pkg.Module)
 		err := func() error {
 			doc := &PackageDoc{pkg}
-			docPath := doc.DocBase(docsRoot) + ".md"
-			docDir := filepath.Dir(docPath)
+			docFilePath := doc.DocBase(docsRoot) + ".md"
+			docDir := filepath.Dir(docFilePath)
 			err := os.MkdirAll(docDir, 0777)
 			if err != nil {
 				return err
 			}
-			docFile, err := os.Create(docPath)
+			docFile, err := os.Create(docFilePath)
 			if err != nil {
 				return err
 			}
@@ -68,9 +68,10 @@ func main() {
 			if mkDocs.SiteName == "" {
 				mkDocs.SiteName = filepath.Base(pkg.Module.Dir)
 			}
+			docLinkPath := doc.DocBase(".")
 			mkDocs.Nav = append(mkDocs.Nav, NavItem{
 				Name: pkg.PkgPath,
-				Path: docPath,
+				Path: docLinkPath + ".md",
 			})
 			return nil
 		}()
