@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"go/build"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/ghodss/yaml"
+	"github.com/imdario/mergo"
 	"github.com/princjef/gomarkdoc"
 	"github.com/princjef/gomarkdoc/lang"
 	"github.com/princjef/gomarkdoc/logger"
@@ -44,6 +46,11 @@ func main() {
 		}
 		if strings.HasSuffix(pkg.Name, "_test") {
 			// skip test packages
+			continue
+		}
+		if pkg.Module == nil {
+			log.Printf("warning: failed to resolve package %v", pkg)
+			log.Printf("try `go get -u %v`?", pkg)
 			continue
 		}
 		log.Printf("%s %#v", pkg.PkgPath, pkg.Module)
@@ -81,12 +88,37 @@ func main() {
 	}
 
 	mkDocsPath := filepath.Join(*outputDir, "mkdocs.yml")
+
+	existing := map[string]interface{}{}
+	if existingContent, err := ioutil.ReadFile(mkDocsPath); err == nil {
+		err = yaml.Unmarshal(existingContent, &existing)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if !os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+	update := map[string]interface{}{}
+	updateContent, err := json.Marshal(&mkDocs)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = json.Unmarshal(updateContent, &update)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = mergo.Merge(&existing, &update)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	mkDocsFile, err := os.Create(mkDocsPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer mkDocsFile.Close()
-	mkDocsContent, err := yaml.Marshal(mkDocs)
+	mkDocsContent, err := yaml.Marshal(existing)
 	if err != nil {
 		log.Fatal(err)
 	}
